@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 contract ERC20 {
-    address owner;
+    address public owner;
     uint private _totalSupply;
     string private _name;
     string private _symbol;
@@ -29,11 +29,31 @@ contract ERC20 {
         return true;
     }
 
-    function transferFrom(address from_, address to_, uint amount) public returns(bool) {
+    function transferFrom(address from_, address to_, uint amount_) public returns(bool) {
         require(to_ != address(0) && from_ != address(0), 'Zero address transfer!');
         require(to_ != from_, 'Self transfer!');
+        require(allowances[from_][msg.sender] >= amount_, 'Not enough allowance');
+
+        balances[from_] -= amount_;
+        balances[to_] += amount_;
 
         return true;
+    }
+
+    function approve(address to_, uint value_) external returns(bool) {
+        require(balances[msg.sender] >= value_, 'Not enough balance');
+        
+        allowances[msg.sender][to_] = value_;
+
+        return true;
+    }
+
+    function allowance(address owner_, address spender_) public view returns(uint) {
+        return allowances[owner_][spender_];
+    }
+
+    function balanceOf(address of_) public view returns(uint) {
+        return balances[of_];
     }
 
     function totalSupply() external view returns(uint256) {
