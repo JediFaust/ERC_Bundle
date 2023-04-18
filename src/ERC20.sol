@@ -9,13 +9,26 @@ contract ERC20 {
     mapping(address => uint) balances;
     mapping(address => mapping(address => uint)) allowances;
 
+    event Transfer(address from, address to, uint amount);
+    event Approval(address owner, address spender, uint amount);
+
+    enum Error { ZeroAddressTransfer }
+
     constructor(string memory name_, string memory symbol_, uint totalSupply_) {
         owner = msg.sender;
         _totalSupply = totalSupply_;
         _name = name_;
         _symbol = symbol_;
 
-        // transfer to the owner or distribute
+        balances[msg.sender] = totalSupply_;
+    }
+
+    function transfer(address to_, uint amount_) public returns(bool) {
+        require(to_ != address(0), Error.ZeroAddressTransfer);
+        balances[msg.sender] -= amount;
+        balances[to_] += amount;
+
+        return true;
     }
 
     function totalSupply() external view returns(uint256) {
