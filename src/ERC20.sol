@@ -12,8 +12,6 @@ contract ERC20 {
     event Transfer(address from, address to, uint amount);
     event Approval(address owner, address spender, uint amount);
 
-    enum Error { ZeroAddressTransfer }
-
     constructor(string memory name_, string memory symbol_, uint totalSupply_) {
         owner = msg.sender;
         _totalSupply = totalSupply_;
@@ -24,9 +22,16 @@ contract ERC20 {
     }
 
     function transfer(address to_, uint amount_) public returns(bool) {
-        require(to_ != address(0), Error.ZeroAddressTransfer);
-        balances[msg.sender] -= amount;
-        balances[to_] += amount;
+        require(to_ != address(0) && to_ != address(msg.sender), 'Invalid destination address');
+        balances[msg.sender] -= amount_;
+        balances[to_] += amount_;
+
+        return true;
+    }
+
+    function transferFrom(address from_, address to_, uint amount) public returns(bool) {
+        require(to_ != address(0) && from_ != address(0), 'Zero address transfer!');
+        require(to_ != from_, 'Self transfer!');
 
         return true;
     }
