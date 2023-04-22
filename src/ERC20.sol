@@ -21,6 +21,17 @@ contract ERC20 {
         balances[msg.sender] = totalSupply_;
     }
 
+    modifier onlyOwner() {
+        require(msg.sender == owner, 'Ownership required');
+        _;
+    }
+
+    function renounceOwnership() external onlyOwner returns(bool) {
+        owner = address(0);
+
+        return true;
+    }
+
     function transfer(address to_, uint amount_) public returns(bool) {
         require(to_ != address(0) && to_ != address(msg.sender), 'Invalid destination address');
         balances[msg.sender] -= amount_;
@@ -34,6 +45,7 @@ contract ERC20 {
         require(to_ != from_, 'Self transfer!');
         require(allowances[from_][msg.sender] >= amount_, 'Not enough allowance');
 
+        allowances[from_][msg.sender] -= amount_;
         balances[from_] -= amount_;
         balances[to_] += amount_;
 
