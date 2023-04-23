@@ -45,6 +45,13 @@ contract Info is ERC20Core {
 }
 
 contract Transfer is ERC20Core {
+    function test_Transfer() external {
+        uint amount = 100 * 10 ** 18;
+        erc20.transfer(tester, amount);
+        assertEq(erc20.balanceOf(deployer), SUPPLY - amount);
+        assertEq(erc20.balanceOf(tester), amount);
+    }
+
     function test_ApprovalAndTransfer() public {
         uint testerBalanceInitial = erc20.balanceOf(tester);
         uint deployerBalanceInitial = erc20.balanceOf(deployer);
@@ -75,12 +82,25 @@ contract Transfer is ERC20Core {
         assertEq(erc20.balanceOf(deployer), SUPPLY - 100);
         assertEq(erc20.balanceOf(tester), 100);
     }
+}
 
-    function test_RenounceOwnership() public {
+contract Owner is ERC20Core {
+    function test_RenounceOwnership() external {
         erc20.renounceOwnership();
 
         address owner = erc20.owner();
 
         assertEq(owner, address(0));
+    }
+
+    function test_RenounceAccess() external {
+        vm.expectRevert('Ownership required');
+        vm.prank(address(tester));
+
+        erc20.renounceOwnership();
+
+        address owner = erc20.owner();
+
+        assertEq(deployer, owner);
     }
 }
