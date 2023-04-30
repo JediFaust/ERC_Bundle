@@ -34,6 +34,8 @@ contract ERC20 {
 
     function transfer(address to_, uint amount_) public returns(bool) {
         require(to_ != address(0) && to_ != address(msg.sender), 'Invalid destination address');
+        require(balances[msg.sender] >= amount_, 'Not enough balance');
+        require(amount_ > 0, 'Zero amount!');
         balances[msg.sender] -= amount_;
         balances[to_] += amount_;
 
@@ -43,7 +45,7 @@ contract ERC20 {
     function transferFrom(address from_, address to_, uint amount_) public returns(bool) {
         require(to_ != address(0) && from_ != address(0), 'Zero address transfer!');
         require(to_ != from_, 'Self transfer!');
-        require(allowances[from_][msg.sender] >= amount_, 'Not enough allowance');
+        require(allowances[from_][msg.sender] >= amount_ || from_ == msg.sender, 'Not enough allowance');
 
         allowances[from_][msg.sender] -= amount_;
         balances[from_] -= amount_;

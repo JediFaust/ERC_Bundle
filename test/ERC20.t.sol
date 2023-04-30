@@ -14,7 +14,7 @@ contract ERC20Core is Test {
     string internal NAME = 'JediToken';
     string internal SYMBOL = 'JDT';
 
-    function setUp() public {
+    function setUp() external {
         erc20 = new ERC20(NAME, SYMBOL, SUPPLY);
         deployer = erc20.owner();
         tester = msg.sender;
@@ -46,19 +46,42 @@ contract Info is ERC20Core {
 
 contract Transfer is ERC20Core {
     function test_Transfer() external {
-        uint amount = 100 * 10 ** 18;
+        uint amount = 1000000 * 10 ** 18;
         erc20.transfer(tester, amount);
-        assertEq(erc20.balanceOf(deployer), SUPPLY - amount);
+        assertEq(erc20.balanceOf(deployer), 0);
         assertEq(erc20.balanceOf(tester), amount);
     }
 
+    function test_Transfer_RevertOnAmount() external {
+        uint amount = 1000000 * 10 ** 18;
+        erc20.transfer(tester, amount);
+
+        vm.expectRevert('Not enough balance');
+        erc20.transfer(tester, 1);
+    }
+
+    function test_Transfer_RevertOnZeroAddress() external {
+        uint amount = 1000000 * 10 ** 18;
+        vm.expectRevert('Invalid destination address');
+        erc20.transfer(address(0), amount);
+    }
+
+    function test_Transfer_RevertOnDestination() external {
+        uint amount = 1000000 * 10 ** 18;
+        vm.expectRevert('Invalid destination address');
+        erc20.transfer(deployer, amount);
+    }
+
+    function test_Transfer_RevertOnZeroAmount() external {
+        uint amount = 0;
+        vm.expectRevert('Zero amount!');
+        erc20.transfer(tester, amount);
+    }
+
+}
+
+contract TransferFrom is ERC20Core {
     function test_ApprovalAndTransfer() public {
-        uint testerBalanceInitial = erc20.balanceOf(tester);
-        uint deployerBalanceInitial = erc20.balanceOf(deployer);
-
-        assertEq(testerBalanceInitial, 0);
-        assertEq(deployerBalanceInitial, SUPPLY);
-
         erc20.approve(tester, SUPPLY);
         vm.prank(address(tester));
         erc20.transferFrom(deployer, tester, SUPPLY);
@@ -69,7 +92,22 @@ contract Transfer is ERC20Core {
         assertEq(testerBalanceFinal, SUPPLY);
         assertEq(deployerBalanceFinal, 0);
     }
+    
+    function test_RevertOnAllowance() public {
+        erc20.approve(tester, SUPPLY);
+        vm.prank(address(tester));
+        vm.expectRevert('Not enough allowance');
+        erc20.transferFrom(deployer, tester, SUPPLY + 1);
 
+        uint testerBalanceFinal = erc20.balanceOf(tester);
+        uint deployerBalanceFinal = erc20.balanceOf(deployer);
+
+        assertEq(testerBalanceFinal, 0);
+        assertEq(deployerBalanceFinal, SUPPLY);
+    }
+}
+
+contract Allowance is ERC20Core {
     function test_Allowance() external {
         assertEq(erc20.allowance(address(this), tester), 0);
         erc20.approve(tester, 100);
