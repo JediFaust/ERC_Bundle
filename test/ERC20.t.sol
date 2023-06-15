@@ -56,25 +56,19 @@ contract Transfer is ERC20Core {
         uint amount = 1000000 * 10 ** 18;
         erc20.transfer(tester, amount);
 
-        vm.expectRevert('Not enough balance');
+        vm.expectRevert('ERC20: Not enough balance');
         erc20.transfer(tester, 1);
     }
 
     function test_Transfer_RevertOnZeroAddress() external {
         uint amount = 1000000 * 10 ** 18;
-        vm.expectRevert('Invalid destination address');
+        vm.expectRevert('ERC20: Zero address transfer');
         erc20.transfer(address(0), amount);
-    }
-
-    function test_Transfer_RevertOnDestination() external {
-        uint amount = 1000000 * 10 ** 18;
-        vm.expectRevert('Invalid destination address');
-        erc20.transfer(deployer, amount);
     }
 
     function test_Transfer_RevertOnZeroAmount() external {
         uint amount = 0;
-        vm.expectRevert('Zero amount!');
+        vm.expectRevert('ERC20: Zero amount transfer');
         erc20.transfer(tester, amount);
     }
 
@@ -96,7 +90,7 @@ contract TransferFrom is ERC20Core {
     function test_RevertOnAllowance() public {
         erc20.approve(tester, SUPPLY);
         vm.prank(address(tester));
-        vm.expectRevert('Not enough allowance');
+        vm.expectRevert('ERC20: Not enough allowance');
         erc20.transferFrom(deployer, tester, SUPPLY + 1);
 
         uint testerBalanceFinal = erc20.balanceOf(tester);
@@ -113,7 +107,7 @@ contract Allowance is ERC20Core {
         erc20.approve(tester, 100);
         uint allowance = erc20.allowance(address(this), tester);
         assertEq(allowance, 100);
-        
+
         vm.prank(address(tester));
         erc20.transferFrom(deployer, tester, 100);
         assertEq(erc20.allowance(deployer, tester), 0);
@@ -132,7 +126,7 @@ contract Owner is ERC20Core {
     }
 
     function test_RenounceAccess() external {
-        vm.expectRevert('Ownership required');
+        vm.expectRevert('ERC20: Ownership required');
         vm.prank(address(tester));
 
         erc20.renounceOwnership();

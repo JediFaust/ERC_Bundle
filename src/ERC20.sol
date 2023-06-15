@@ -22,7 +22,7 @@ contract ERC20 {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner, 'Ownership required');
+        require(msg.sender == owner, 'ERC20: Ownership required');
         _;
     }
 
@@ -32,32 +32,33 @@ contract ERC20 {
         return true;
     }
 
-    function transfer(address to_, uint amount_) public returns(bool) {
-        require(to_ != address(0) && to_ != address(msg.sender), 'Invalid destination address');
-        require(balances[msg.sender] >= amount_, 'Not enough balance');
-        require(amount_ > 0, 'Zero amount!');
-        balances[msg.sender] -= amount_;
-        balances[to_] += amount_;
+    function transfer(address to, uint amount) public returns(bool) {
+        _transfer(msg.sender, to, amount);
 
         return true;
     }
 
-    function transferFrom(address from_, address to_, uint amount_) public returns(bool) {
-        require(to_ != address(0) && from_ != address(0), 'Zero address transfer!');
-        require(to_ != from_, 'Self transfer!');
-        require(allowances[from_][msg.sender] >= amount_ || from_ == msg.sender, 'Not enough allowance');
+    function transferFrom(address from, address to, uint amount) public returns(bool) {
+        require(allowances[from][msg.sender] >= amount || from == msg.sender, 'ERC20: Not enough allowance');
 
-        allowances[from_][msg.sender] -= amount_;
-        balances[from_] -= amount_;
-        balances[to_] += amount_;
+        allowances[from][msg.sender] -= amount;
+
+        _transfer(from, to, amount);
 
         return true;
     }
 
-    function approve(address to_, uint value_) external returns(bool) {
-        require(balances[msg.sender] >= value_, 'Not enough balance');
-        
-        allowances[msg.sender][to_] = value_;
+    function _transfer(address from, address to, uint amount) internal {
+        require(to != address(0) && from != address(0), 'ERC20: Zero address transfer');
+        require(amount > 0, 'ERC20: Zero amount transfer');
+        require(balances[from] >= amount, 'ERC20: Not enough balance');
+
+        balances[from] -= amount;
+        balances[to] += amount;
+    }
+
+    function approve(address to, uint value) external returns(bool) {
+        allowances[msg.sender][to] = value;
 
         return true;
     }
